@@ -1,13 +1,16 @@
 import PersonService from '../services/PersonService'
 
-const Form = function({newName, newNumber, setNewName, setNewNumber, persons, setPersons, statusMessage, setStatusMessage}){
+const Form = function ({ newName, newNumber, setNewName, setNewNumber, persons, setPersons, statusMessage, setStatusMessage }) {
+
+    const phoneNumberRegex = /^\d{2,3}-\d+$/;
+
     const handleNameChange = (e) => setNewName(e.target.value);
 
     const handleNumberChange = (e) => setNewNumber(e.target.value);
 
     const handleStatus = function (message) {
         setStatusMessage(message);
-        setTimeout(()=> setStatusMessage(null), 5000);
+        setTimeout(() => setStatusMessage(null), 5000);
     }
 
     const handleSubmit = function (e) {
@@ -16,18 +19,23 @@ const Form = function({newName, newNumber, setNewName, setNewNumber, persons, se
             name: newName,
             number: newNumber,
         };
-    
+
+        if (!phoneNumberRegex.test(newNumber)){
+            handleStatus("Error: Phone number must be in the format XX(X)-XXXXXX, 2 to 3 digits followed by a dash and any number of digits")
+            return;
+        }
+
         const found = persons.find((element) => element.name === newName);
-    
+
         if (found) {
             // If found, confirm to replace the number
             if (confirm(`${newEntry.name} is already added to phonebook, replace the old number with a new one?`)) {
-                newEntry = { ...found, number: newEntry.number }; 
+                newEntry = { ...found, number: newEntry.number };
                 console.log(newEntry);
                 PersonService.updatePerson(newEntry.id, newEntry)
                     .then(response => {
                         // Update the persons state with the new entry
-                        setPersons(persons.map(person => 
+                        setPersons(persons.map(person =>
                             person.id === response.id ? response : person
                         ));
                         setNewName('');
@@ -48,22 +56,25 @@ const Form = function({newName, newNumber, setNewName, setNewNumber, persons, se
                     setNewName('');
                     setNewNumber('');
                     handleStatus(`Added ${response.name}`);
-                }).catch(e => console.log(e.message));
+                }).catch(e => {
+                    console.log(e);
+                    handleStatus(`${e.response.data.error}`);
+                });
         }
     }
 
     return (
         <form onSubmit={handleSubmit}>
-                <div>
-                    name: <input value={newName} onChange={handleNameChange} required/>
-                </div>
-                <div>
-                    number: <input value={newNumber} onChange={handleNumberChange} required/>
-                </div>
-                <div>
-                    <button type="submit">add</button>
-                </div>
-            </form>
+            <div>
+                name: <input value={newName} onChange={handleNameChange} required />
+            </div>
+            <div>
+                number: <input value={newNumber} onChange={handleNumberChange} required />
+            </div>
+            <div>
+                <button type="submit">add</button>
+            </div>
+        </form>
     )
 }
 

@@ -20,6 +20,12 @@ const Notification = ({ statusMessage }) => {
                 {statusMessage}
             </h2>
         )
+    else if (statusMessage.includes("validation failed") || statusMessage.toLowerCase().includes("error"))
+        return (
+            <h2 style={errorStyle}>
+                {statusMessage}
+            </h2>
+        )
     return (
         <h2 style={notificationStyle}>
             {statusMessage}

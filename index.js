@@ -65,10 +65,10 @@ app.get("/info", (request, response, next) => {
 
 app.get("/api/persons/:id", (request, response) => {
     Phonebook.findById(request.params.id)
-        .then(result => {
-            response.json(result)
+        .then((result) => {
+            response.json(result);
         })
-        .catch(error => next(error));
+        .catch((error) => next(error));
 });
 
 app.delete("/api/persons/:id", (request, response, next) => {
@@ -83,7 +83,7 @@ const generateId = () => {
     return String(Math.floor(Math.random() * 1001));
 };
 
-app.post("/api/persons", (request, response) => {
+app.post("/api/persons", (request, response, next) => {
     const body = request.body;
 
     if (!body.name || !body.number)
@@ -103,14 +103,11 @@ app.post("/api/persons", (request, response) => {
         number: body.number,
     });
 
-    person
-        .save()
-        .then((result) => {
+    person.save()
+        .then(result => {
             response.json(result);
         })
-        .catch((e) =>
-            console.log("Error saving person to database", e.message)
-        );
+        .catch(error => next(error));
 });
 
 app.put("/api/persons/:id", (request, response, next) => {
@@ -135,8 +132,13 @@ app.use(unknownEndpoint);
 const errorHandler = (error, request, response, next) => {
     console.log(error.message);
 
+    if (error.name === 'ValidationError')
+        return response.status(400).json({ error: error.message })
+
     next(error);
 };
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
